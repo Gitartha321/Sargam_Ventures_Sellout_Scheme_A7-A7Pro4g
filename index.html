@@ -359,7 +359,7 @@ body:after{
         <div class="subtitle">Promoter Sell-Out Incentive Performance Dashboard</div>
       </div>
     </div>
-    <div class="period" id="liveStatus">LIVE · EXCEL LINKED</div>
+    <div class="period" id="liveStatus">LIVE · GITHUB DATA LINKED</div>
   </section>
 <section class="kpis">
     <div class="glass kpi accent-blue"><div class="kpi-label">TOTAL TARGET</div><div class="kpi-value" id="kTarget">0</div></div>
@@ -734,30 +734,57 @@ document.getElementById("exportBtn").addEventListener("click",exportASMFile);
 
 
 
+const PUBLIC_DATA_URL =
+  "https://raw.githubusercontent.com/Gitartha321/Sargam_Ventures_Sellout_Scheme_A7-A7Pro4g/main/data.json";
+
 async function loadLiveData(){
-  const status=document.getElementById("liveStatus");
+  const status = document.getElementById("liveStatus");
+
   try{
-    const response=await fetch(new URL("/api/data?t="+Date.now(), window.location.origin),{cache:"no-store"});
-    if(!response.ok) throw new Error("Server returned "+response.status);
-    const payload=await response.json();
-    if(!payload || !Array.isArray(payload.rows)) throw new Error("Invalid data from local Excel service.");
-    rows=payload.rows.map(normalizeRow);
+    const response = await fetch(
+      PUBLIC_DATA_URL + "?t=" + Date.now(),
+      {
+        cache: "no-store",
+        headers: {
+          "Accept": "application/json"
+        }
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("GitHub data.json returned HTTP " + response.status);
+    }
+
+    const payload = await response.json();
+
+    if(!payload || !Array.isArray(payload.rows)){
+      throw new Error("GitHub data.json is invalid or empty.");
+    }
+
+    rows = payload.rows.map(normalizeRow);
+
     render();
+
     if(status){
-      status.textContent=`LIVE · ${payload.fileName||"EXCEL"} · UPDATED ${payload.updatedAt||""}`;
-      status.style.color="#9ce9d9";
+      status.textContent =
+        "LIVE · UPDATED " + (payload.updatedAt || "");
+
+      status.style.color = "#9ce9d9";
     }
+
   }catch(err){
+
+    console.error("GitHub live data error:", err);
+
     if(status){
-      status.textContent="LIVE LINK ERROR · Open the dashboard from the server URL shown by run_dashboard.bat";
-      status.style.color="#c9baff";
+      status.textContent = "LIVE DATA ERROR";
+      status.style.color = "#c9baff";
     }
-    console.error(err);
   }
 }
 
 loadLiveData();
-setInterval(loadLiveData,5000);
+setInterval(loadLiveData, 30000);
 
 </script>
 </body>
