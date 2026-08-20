@@ -734,24 +734,22 @@ document.getElementById("exportBtn").addEventListener("click",exportASMFile);
 
 
 
-const PUBLIC_DATA_URL = "https://raw.githubusercontent.com/Gitartha123/Sargam_Ventures_Sellout_Scheme_A7/A7Pro4g/main/data.json";
-
 async function loadLiveData(){
   const status=document.getElementById("liveStatus");
   try{
-    const response=await fetch(PUBLIC_DATA_URL+"?t="+Date.now(),{cache:"no-store"});
-    if(!response.ok) throw new Error("Data service returned "+response.status);
+    const response=await fetch(new URL("/api/data?t="+Date.now(), window.location.origin),{cache:"no-store"});
+    if(!response.ok) throw new Error("Server returned "+response.status);
     const payload=await response.json();
-    if(!payload || !Array.isArray(payload.rows)) throw new Error("Invalid live data.");
+    if(!payload || !Array.isArray(payload.rows)) throw new Error("Invalid data from local Excel service.");
     rows=payload.rows.map(normalizeRow);
     render();
     if(status){
-      status.textContent=`LIVE · UPDATED ${payload.updatedAt||""}`;
+      status.textContent=`LIVE · ${payload.fileName||"EXCEL"} · UPDATED ${payload.updatedAt||""}`;
       status.style.color="#9ce9d9";
     }
   }catch(err){
     if(status){
-      status.textContent="LIVE DATA UNAVAILABLE";
+      status.textContent="LIVE LINK ERROR · Open the dashboard from the server URL shown by run_dashboard.bat";
       status.style.color="#c9baff";
     }
     console.error(err);
@@ -759,7 +757,6 @@ async function loadLiveData(){
 }
 
 loadLiveData();
-setInterval(loadLiveData,30000);
 setInterval(loadLiveData,5000);
 
 </script>
